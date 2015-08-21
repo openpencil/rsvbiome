@@ -148,19 +148,22 @@ masterlxb <- merge(x = lxbdf, y = samples_cytokines, by = "dateplexplateloc", al
 ## with raw bead level information is generated Bead ID (RID), and fluorescence
 ## measured (RP1) are variables of interest
 
-## Read in the lxb files gives the following columns c('RID', 'DBL', 'DD', 'RP1',
-## 'CL1', 'CL2', 'Aux1', 'TIME') where: -- RID:<32 bit unsigned integer> Reporter
-## identifier. Values ranging [1-500] specifies the bead color/region. RID=0 refer
-## to events that flowcytometer/XMap bead software was unable to classify.  This is
-## the identifier of the cytokine. Also called 'Region ID' -- RP1: <32 bit unsigned
-## integer> Reporter fluorescent intensity, quantifies transcript abundance of the
-## gene interrogated by the bead. ||| This is the raw fluorescence value.  -- DBL –
-## A True/False value for whether the bead falls within the Double Discriminator
-## gate. Should be 1 for all good bead values.  -- DD – A measure of side-scatter.
-## No associated unit.  -- RP1 – Fluorescent Intensity reported by the Reporter
-## channel (High PMT result) -- CL1 – Fluorescent Intensity of the Classification 1
-## dye -- CL2 – Fluorescent Intensity of the Classification 2 dye -- AUX1 – An
-## auxiliary channel, unused for any real data
+## Read in the lxb files gives the following columns
+## c('RID', 'DBL', 'DD', 'RP1', 'CL1', 'CL2', 'Aux1', 'TIME') where:
+## -- RID:<32 bit unsigned integer> Reporter identifier. Values ranging from [1-500]
+## specifies the bead color/region. RID=0 refer to events that flowcytometer/XMap
+## bead software was unable to classify.  This is the identifier of the cytokine.
+## Also called 'Region ID'
+## -- RP1: <32 bit unsigned integer> Reporter fluorescent intensity, quantifies
+## transcript abundance of the gene interrogated by the bead. ||| This is the
+## raw fluorescence value.
+## -- DBL A True/False value for whether the bead falls within the Double
+## Discriminator gate. Should be 1 for all good bead values.
+## -- DD – A measure of side-scatter. No associated unit.
+## -- RP1 – Fluorescent Intensity reported by the Reporter channel (High PMT result)
+## -- CL1 – Fluorescent Intensity of the Classification 1 dye
+## -- CL2 – Fluorescent Intensity of the Classification 2 dye
+## -- AUX1 – An auxiliary channel, unused for any real data
 
 #### 9. Normalize cytokine values ####
 ## take log of all fluorescence values after adding a small smoothing constant
