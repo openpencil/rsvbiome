@@ -43,7 +43,7 @@
 setwd(".")
 
 #### 2. Load libraries ####
-source("./rsvbiome_miscutilities.R")
+source("./rsvbiome_utilities.R")
 
 #### 3. Load annotations ####
 source("./rsvbiome_annotations.R")
@@ -166,9 +166,6 @@ masterlxb <- merge(x = lxbdf, y = samples_cytokines, by = "dateplexplateloc", al
 ## -- AUX1 – An auxiliary channel, unused for any real data
 
 #### 9. Normalize cytokine values ####
-## take log of all fluorescence values after adding a small smoothing constant
-masterlxb[, `:=`(logfl, log(RP1 + 0.001)), ]
-
 ## create a data subset for each plate with a list
 lxbsplit <- sapply(unique(masterlxb$plate), function(fname) {
     out <- masterlxb[plate == fname]
@@ -191,9 +188,11 @@ trimmedmean <- function(valvector) {
 ## function for subtracting the trimmed mean of the background value from the fluorescence
 backgrounddiff <- function(datasubtable, bkdtrimmedmean) {
     # subtract background mean for the cytokine for each flourescence value
-    diffvector <- datasubtable$logfl - bkdtrimmedmean[RID == unique(datasubtable$RID), V1]
+    diffvector <- datasubtable$RP1 - bkdtrimmedmean[RID == unique(datasubtable$RID), V1]
+    # add the minimum value of difference + a small offset of 0.0001 to make differences positive
+    logdiffvector <- log(diffvector - min(diffvector) + 0.0001)
     # calculate the trimmed mean of these differences
-    trimmeddiff <- trimmedmean(diffvector)
+    trimmeddiff <- trimmedmean(logdiffvector)
     return(trimmeddiff)
 }
 
@@ -202,24 +201,23 @@ normalizecytokines <- function(platename, platedatalist, sampleassignmentsheet) 
     platedata <- data.table(platedatalist[[platename]])
     # Take trimmed mean of the duplicate background wells for each cytokine
     # Background0 is the common name for the background sample
-    bkdtrimmedmean <- platedata[sample == "Background0", trimmedmean(logfl), by = RID]
-    # calculate distribution of beads that fell within the Double Discriminator gate (DBL == 1)
+    bkdtrimmedmean <- platedata[sample == "Background0", trimmedmean(RP1), by = RID]
+    # for each plate calculate number of beads that fell within the Double Discriminator gate (DBL == 1)
     beadist <- platedata[, sum(DBL), by = plateloc]
-    # calculate the number of beads at the 5%ile over the values from the entire plate; this is the cutoff
-    beadist[, `:=`(beadcutoff, ceiling(quantile(V1, probs = 0.05))), ]
-    # discard samples/wells that have total number of beads less than the 5%ile cutoff
-    # in aspirates with lot of mucus, beads stick together into conglomerates and do
-    # not attach to the magnet during washing.
+    # discard samples/wells that have total number of beads less than the 50 beads
+    beadist[, beadcutoff:=50,]
+    # in aspirates with lot of mucus, beads stick together into conglomerates and do not attach
+    # to the magnet during washing. These wells will typically have a low number of beads.
     keepsamples <- beadist[V1 >= beadcutoff, plateloc]
     lostsamples <- beadist[V1 < beadcutoff, plateloc]
-    cat(length(lostsamples), "samples had bead counts below 5%ile \n")
-    lostsamplenames <- sampleassignmentsheet[which(sampleassignmentsheet$plateloc %in% lostsamples
-                                                   & sampleassignmentsheet$plate == platename), "sample"]
+    lostsamplenames <- sampleassignmentsheet[which(sampleassignmentsheet$plateloc %in% lostsamples &
+                                                     sampleassignmentsheet$plate == platename), "sample"]
+    cat(length(lostsamples),"samples had bead counts below 50 \n")
     # print samplenames that were dropped due to insufficient beads
-    cat(lostsamplenames, "\n")
+    cat(lostsamplenames,"\n")
     datatrim <- platedata[plateloc %in% keepsamples]
     # removed the trimmed mean of the background well values from the reported fluorescence
-    cytokinevals <- datatrim[, backgrounddiff(.SD, bkdtrimmedmean), by = c("RID", "sample"), .SDcols = c("RID", "logfl")]
+    cytokinevals <- datatrim[, backgrounddiff(.SD, bkdtrimmedmean), by = c("RID", "sample"), .SDcols = c("RID", "RP1")]
     # rename cytokine value column
     setnames(x = cytokinevals, old = "V1", new = "normcyto")
     # add a plate column
@@ -247,7 +245,7 @@ cytonormalized <- sapply(names(lxbsplit), function(pname) {
 cytoply <- data.table(ldply(cytonormalized))
 ## Check number of plates: 15 plates
 cytoply[, unique(plate), ]
-## Check number of samples: 233 samples
+## Check number of samples: 234 samples
 cytoply[, unique(sample), ]
 ## Check number of cytokines: 53 cytokines with unique names
 cytoply[, unique(cytokine), ]
@@ -262,6 +260,6 @@ cytovalues$V1 <- round(x = as.numeric(cytovalues$V1), 3)
 cytoval <- spread(data = cytovalues, key = cytokine, value = V1, fill = NA)
 
 ## write out processed cytokines
-write.csv(cytoval, "Vanderbilt_cytokine_normalizedvals.csv", row.names = F)
+write.csv(cytoval, "Vanderbilt_cytokine_normalizedvals_V2.csv", row.names = F)
 
 # --------------------------------End of Script---------------------------------#
