@@ -21,12 +21,11 @@ installpackages <- function(pkgs) {
     }
 }
 
-installpackages(c("glmnet", "BoomSpikeSlab", "Hmisc", "randomForest", "mice",
-                  "data.table", "plyr", "stringr", "reshape", "reshape2",
+installpackages(c("Hmisc", "mice", "data.table", "plyr", "stringr", "reshape", "reshape2",
                   "scales", "tidyr", "dplyr", "testit", "devtools", "rlecuyer",
                   "gridExtra", "doMC", "parallel", "MASS", "digest", "grid",
                   "assertthat", "lxb", "lubridate", "ggplot2", "corrplot",
-                  "colortools", "RColorBrewer", "Cairo"))
+                  "colortools", "RColorBrewer"))
 
 #### Set font encoding and locales ####
 Sys.setlocale("LC_CTYPE", "en_US.UTF-8")

@@ -39,8 +39,13 @@
 #### 1. Define work directories ####
 ## Clone the GitHub repository and set it as the work directory
 ## Command line: git clone git://github.com/openpencil/rsvbiome.git
-## cd rsvbiome
-setwd(".")
+## Make sure that you replace the "~/rsvbiome" below with the path to your clone rsvbiome directory
+workingdirectory <- "~/rsvbiome"
+setwd(workingdirectory)
+## Check your working directory
+## getwd()
+## This *MUST* be the same as the workingdirectory path you set above.
+## If not, please go back to line 43 and run up to here.
 
 #### 2. Load libraries ####
 source("./rsvbiome_utilities.R")
@@ -86,6 +91,15 @@ samples_cytokines$dateplexplateloc <- sprintf("Y%02sM%02sD%02sPLEX%02sLOC%s",
                                               samples_cytokines$numplex,
                                               samples_cytokines$plateloc)
 
+## Check the contents of the file you have generated. Should look like this:
+## head(samples_cytokines)
+# location      sample                            filename dateinsheet numplex plateloc dateonfile             plate          dateplexplateloc
+# 1  1(1,A1) Background0 Anderson NP aspirates 23plex replay  2013-05-31      23    P1_A1 2013-05-30 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_A1
+# 2  2(1,B1) Background0 Anderson NP aspirates 23plex replay  2013-05-31      23    P1_B1 2013-05-30 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_B1
+# 3  3(1,C1)   Standard1 Anderson NP aspirates 23plex replay  2013-05-31      23    P1_C1 2013-05-30 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_C1
+# 4  4(1,D1)   Standard1 Anderson NP aspirates 23plex replay  2013-05-31      23    P1_D1 2013-05-30 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_D1
+# 5  5(1,E1)   Standard2 Anderson NP aspirates 23plex replay  2013-05-31      23    P1_E1 2013-05-30 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_E1
+# 6  6(1,F1)   Standard2 Anderson NP aspirates 23plex replay  2013-05-31      23    P1_F1 2013-05-30 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_F1
 
 #### 5. Read in all lxb files ####
 listoflxbfiles <- list.files(path = "./assets/lxb", pattern = "*.lxb", full.names = T, recursive = T)
@@ -95,6 +109,7 @@ lxbfiles <- sapply(listoflxbfiles, function(fname) {
     return(lxbout)
 }, simplify = F)
 ## check length with length(lxbfiles)
+## 1412 (for the first batch of files)
 
 #### 6. Build information sheet for lxb files ####
 lxbfileinfo <- data.frame(nlxb = names(lxbfiles), stringsAsFactors = F)
@@ -110,6 +125,22 @@ lxbfileinfo$dateplex <- sprintf("Y%02sM%02sD%02sPLEX%02s",
 
 ## generate a hash variable for several attributes
 lxbfileinfo$dateplexplateloc <- sprintf("%sLOC%s", lxbfileinfo$dateplex, lxbfileinfo$plateloc)
+## Check the lxbfileinfo file you created:
+## head(lxbfileinfo)
+# nlxb                                  dirname    datelxb
+# 1  ./assets/lxb/Anderson_NP_aspirates_23plex_5_30_13_lxb/Anderson NP aspirates 23plex 5 30 13_P1_A1.lxb Anderson_NP_aspirates_23plex_5_30_13_lxb 2013-05-30
+# 2 ./assets/lxb/Anderson_NP_aspirates_23plex_5_30_13_lxb/Anderson NP aspirates 23plex 5 30 13_P1_A10.lxb Anderson_NP_aspirates_23plex_5_30_13_lxb 2013-05-30
+# 3 ./assets/lxb/Anderson_NP_aspirates_23plex_5_30_13_lxb/Anderson NP aspirates 23plex 5 30 13_P1_A11.lxb Anderson_NP_aspirates_23plex_5_30_13_lxb 2013-05-30
+# 4 ./assets/lxb/Anderson_NP_aspirates_23plex_5_30_13_lxb/Anderson NP aspirates 23plex 5 30 13_P1_A12.lxb Anderson_NP_aspirates_23plex_5_30_13_lxb 2013-05-30
+# 5  ./assets/lxb/Anderson_NP_aspirates_23plex_5_30_13_lxb/Anderson NP aspirates 23plex 5 30 13_P1_A2.lxb Anderson_NP_aspirates_23plex_5_30_13_lxb 2013-05-30
+# 6  ./assets/lxb/Anderson_NP_aspirates_23plex_5_30_13_lxb/Anderson NP aspirates 23plex 5 30 13_P1_A3.lxb Anderson_NP_aspirates_23plex_5_30_13_lxb 2013-05-30
+# numplex plateloc          dateplex           dateplexplateloc
+# 1      23    P1_A1 Y2013M05D30PLEX23  Y2013M05D30PLEX23LOCP1_A1
+# 2      23   P1_A10 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_A10
+# 3      23   P1_A11 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_A11
+# 4      23   P1_A12 Y2013M05D30PLEX23 Y2013M05D30PLEX23LOCP1_A12
+# 5      23    P1_A2 Y2013M05D30PLEX23  Y2013M05D30PLEX23LOCP1_A2
+# 6      23    P1_A3 Y2013M05D30PLEX23  Y2013M05D30PLEX23LOCP1_A3
 
 #### 7. Process lxb files ####
 ## each file is named with the hash variable made of the date, assay and plate location
@@ -259,7 +290,16 @@ cytovalues <- cytoply[, pasteit(.SD), by = c("sample", "cytokine"), .SDcols = "n
 cytovalues$V1 <- round(x = as.numeric(cytovalues$V1), 3)
 cytoval <- spread(data = cytovalues, key = cytokine, value = V1, fill = NA)
 
+## check the normalized cytokine values created (1st 5 rows and 1st 5 cols)
+## head(cytoval)[1:5, 1:5, with=F]
+# sample 6CKine BCA-1 CTACK   EGF
+# 1: N0002 RSV  2.176 3.431 2.978 4.040
+# 2: N0003 RSV  2.646 4.994 2.945 5.457
+# 3: N0005 HRV  2.719 3.672 2.888    NA
+# 4: N0006 HRV  2.070 5.056 3.130 6.094
+# 5: N0007 RSV  2.671 5.404 3.026 5.259
+
 ## write out processed cytokines
-write.csv(cytoval, "Vanderbilt_cytokine_normalizedvals_V2.csv", row.names = F)
+write.csv(cytoval, "Vanderbilt_cytokine_lxbnormalizedvals.csv", row.names = F)
 
 # --------------------------------End of Script---------------------------------#
